@@ -1,0 +1,37 @@
+#!/bin/bash
+# ytmusic-search - Search YouTube Music for songs
+# Usage: ytmusic-search "artist name or song title"
+
+if [ -z "$1" ]; then
+    echo "Usage: ytmusic-search \"song or artist name\""
+    echo "Example: ytmusic-search \"Pitbull Feel This Moment\""
+    exit 1
+fi
+
+QUERY="$1"
+
+python3 << EOF
+from ytmusicapi import YouTubeMusic
+import json
+
+ytm = YouTubeMusic()
+results = ytm.search("$QUERY", filter="songs", limit=5)
+
+if not results:
+    print("No results found for: $QUERY")
+    exit(1)
+
+print(f"\n🎵 Results for: \"$QUERY\"\n")
+for i, song in enumerate(results, 1):
+    video_id = song.get('videoId', '')
+    title = song.get('title', 'Unknown')
+    artist = song.get('artists', [{}])[0].get('name', 'Unknown Artist') if song.get('artists') else 'Unknown Artist'
+    duration = song.get('duration', '??:??')
+    
+    print(f"{i}. {title} - {artist} ({duration})")
+    print(f"   Video ID: {video_id}")
+    print(f"   URL: https://www.youtube.com/watch?v={video_id}&autoplay=1")
+    print()
+
+print("💡 Tip: Copy the URL and open it in your browser, or use 'ytmusic-play' to open automatically")
+EOF

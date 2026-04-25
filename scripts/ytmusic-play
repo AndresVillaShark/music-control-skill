@@ -1,0 +1,54 @@
+#!/bin/bash
+# ytmusic-play - Search and open first result in browser
+# Usage: ytmusic-play "song query"
+
+if [ -z "$1" ]; then
+    echo "Usage: ytmusic-play \"song or artist name\""
+    echo "Example: ytmusic-play \"Billie Eilish bad guy\""
+    exit 1
+fi
+
+QUERY="$1"
+
+# Search and get the first result's video ID
+VIDEO_ID=$(python3 << 'EOF'
+from ytmusicapi import YouTubeMusic
+import sys
+
+try:
+    ytm = YouTubeMusic()
+    results = ytm.search sys.argv[1], filter="songs", limit=1)
+    if results and len(results) > 0:
+        print(results[0].get('videoId', ''))
+    else:
+        sys.exit(1)
+except Exception as e:
+    print(f"Error: {e}", file=sys.stderr)
+    sys.exit(1)
+EOF
+"$QUERY")
+
+if [ -z "$VIDEO_ID" ]; then
+    echo "❌ No results found for: $QUERY"
+    exit 1
+fi
+
+URL="https://www.youtube.com/watch?v=$VIDEO_ID&autoplay=1"
+
+echo "🎵 Opening: $QUERY"
+echo "🔗 $URL"
+
+# Try to open in default browser
+if command -v xdg-open &> /dev/null; then
+    xdg-open "$URL" &
+elif command -v open &> /dev/null; then
+    open "$URL" &
+elif command -v gnome-open &> /dev/null; then
+    gnome-open "$URL" &
+else
+    echo "⚠️  Couldn't open browser automatically. Copy the URL and open manually:"
+    echo "$URL"
+fi
+
+echo "💡 Note: If nothing plays, click the video - browsers may block autoplay."
+echo "🔊 Adjust volume on your local machine."

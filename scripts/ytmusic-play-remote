@@ -1,0 +1,62 @@
+#!/bin/bash
+# ytmusic-play-remote - Search on this server, open on remote machine
+# Usage: ytmusic-play-remote user@host "song query"
+# Example: ytmusic-play-remote mariovillalpando@100.82.138.125 "Frank Sinatra Fly Me to the Moon"
+
+if [ -z "$1" ] || [ -z "$2" ]; then
+    echo "Usage: ytmusic-play-remote user@host \"song query\""
+    echo "Example: ytmusic-play-remote mariovillalpando@100.82.138.125 \"Billie Eilish bad guy\""
+    exit 1
+fi
+
+REMOTE_HOST="$1"
+shift
+QUERY="$1"
+
+# Search on this machine (where ytmusicapi is installed)
+VIDEO_ID=$(python3 << 'PYEOF'
+from ytmusicapi import YouTubeMusic
+import sys
+
+try:
+    ytm = YouTubeMusic()
+    results = ytm.search(sys.argv[1], filter="songs", limit=1)
+    if results and len(results) > 0:
+        print(results[0].get('videoId', ''))
+    else:
+        sys.exit(1)
+except Exception as e:
+    print(f"Error: {e}", file=sys.stderr)
+    sys.exit(1)
+PYEOF
+"$QUERY")
+
+if [ -z "$VIDEO_ID" ]; then
+    echo "❌ No results found for: $QUERY"
+    exit 1
+fi
+
+URL="https://www.youtube.com/watch?v=$VIDEO_ID&autoplay=1"
+
+echo "🎵 Searching for: $QUERY"
+echo "📍 Opening on: $REMOTE_HOST"
+echo "🔗 $URL"
+echo ""
+
+# Try to open via SSH using AppleScript (for macOS)
+echo "🚀 Opening in Safari on remote machine..."
+ssh -o StrictHostKeyChecking=no "$REMOTE_HOST" "osascript -e 'tell application \"Safari\" to open location \"$URL\"'" 2>/dev/null
+
+if [ $? -eq 0 ]; then
+    echo "✅ Sent command to open on $REMOTE_HOST"
+    echo "💡 Check your browser window - you may need to click play if autoplay is blocked"
+    echo "🔊 Don't forget to adjust volume on your Mac!"
+else
+    echo "⚠️  SSH command failed. Opening manually:"
+    echo "$URL"
+    echo ""
+    echo "Tips:"
+    echo "1. Make sure SSH key is set up for $REMOTE_HOST"
+    echo "2. Make sure Safari is running on the remote machine"
+    echo "3. Or just copy the URL and paste it in your browser"
+fi
