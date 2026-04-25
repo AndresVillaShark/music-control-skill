@@ -17,7 +17,7 @@ import sys
 
 try:
     ytm = YouTubeMusic()
-    results = ytm.search sys.argv[1], filter="songs", limit=1)
+    results = ytm.search(sys.argv[1], filter="songs", limit=1)
     if results and len(results) > 0:
         print(results[0].get('videoId', ''))
     else:
