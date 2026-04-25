@@ -11,22 +11,21 @@ fi
 QUERY="$1"
 
 # Search and get the first result's video ID
-VIDEO_ID=$(python3 << 'EOF'
+VIDEO_ID=$(python3 -c "
 from ytmusicapi import YTMusic
 import sys
 
 try:
-    ytm = YouTubeMusic()
-    results = ytm.search(sys.argv[1], filter="songs", limit=1)
+    ytm = YTMusic()
+    results = ytm.search(sys.argv[1], filter='songs', limit=1)
     if results and len(results) > 0:
         print(results[0].get('videoId', ''))
     else:
         sys.exit(1)
 except Exception as e:
-    print(f"Error: {e}", file=sys.stderr)
+    print(f'Error: {e}', file=sys.stderr)
     sys.exit(1)
-EOF
-"$QUERY")
+" "$QUERY")
 
 if [ -z "$VIDEO_ID" ]; then
     echo "❌ No results found for: $QUERY"
