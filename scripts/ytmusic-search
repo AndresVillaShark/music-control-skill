@@ -11,10 +11,10 @@ fi
 QUERY="$1"
 
 python3 << EOF
-from ytmusicapi import YouTubeMusic
+from ytmusicapi import YTMusic
 import json
 
-ytm = YouTubeMusic()
+ytm = YTMusic()
 results = ytm.search("$QUERY", filter="songs", limit=5)
 
 if not results:

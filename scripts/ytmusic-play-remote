@@ -15,7 +15,7 @@ QUERY="$1"
 
 # Search on this machine (where ytmusicapi is installed)
 VIDEO_ID=$(python3 << 'PYEOF'
-from ytmusicapi import YouTubeMusic
+from ytmusicapi import YTMusic
 import sys
 
 try:
